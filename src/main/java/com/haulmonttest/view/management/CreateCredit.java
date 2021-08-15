@@ -137,6 +137,10 @@ public class CreateCredit extends VerticalLayout {
                 + creditRepository.findByType(creditSelect.getValue()).getLimit());
                 errorNotification.open();
             }
+            else if (Integer.parseInt(months.getValue()) > 120 || Integer.parseInt(months.getValue()) <= 1){
+                errorNotification.setText("Months can not be greater than 120 and lesser than 1!");
+                errorNotification.open();
+            }
             else {
 
                 CreditOffer creditOffer = new CreditOffer();

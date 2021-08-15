@@ -5,7 +5,8 @@ import com.haulmonttest.domain.UuidMap;
 import com.haulmonttest.repo.ClientRepository;
 import com.haulmonttest.repo.UuidMapRepository;
 import com.haulmonttest.view.entityTables.Clients;
-import com.vaadin.flow.component.Key;
+import com.haulmonttest.view.entityTables.Credits;
+import com.haulmonttest.view.subViews.EmptyMapping;
 import com.vaadin.flow.component.KeyNotifier;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -25,12 +26,11 @@ import java.util.UUID;
 
 @Route("manageClient")
 @PageTitle("Manage client")
-public class ManageClient extends VerticalLayout implements HasUrlParameter<Integer>, KeyNotifier {
+public class ManageClient extends VerticalLayout implements HasUrlParameter<Integer> {
     private UUID id;
     private VerticalLayout clientForm;
     private TextField name;
     private TextField email;
-    private EmailValidator emailValidator;
     private TextField passport;
     private Button save;
     private Button cancel;
@@ -44,12 +44,13 @@ public class ManageClient extends VerticalLayout implements HasUrlParameter<Inte
     public void setParameter(BeforeEvent beforeEvent, Integer intByUuid) {
         if(uuidMapRepository.findById(intByUuid).isPresent())
             id = uuidMapRepository.findById(intByUuid).get().getUuid();
+
         if (id != null) {
             toolbar.add(new H3("Change client"));
         } else {
             toolbar.add(new H3("Add new client"));
         }
-        fillForm();
+        fillForm(intByUuid);
     }
 
     @Autowired
@@ -73,23 +74,27 @@ public class ManageClient extends VerticalLayout implements HasUrlParameter<Inte
        add(toolbar, clientForm);
     }
 
-    public void fillForm() {
+    public void fillForm(int intByUuid) {
 
-        if (id != null) {
-            Client client = clientRepository.findById(id);
-            name.setValue(client.getName());
-            email.setValue(client.getEmail());
-            passport.setValue(client.getPassport());
+        if(id == null && intByUuid != 0) {
+           name.setVisible(false);
+           email.setVisible(false);
+           passport.setVisible(false);
+           save.setVisible(false);
+
+            toolbar.setVisible(false);
+        } else {
+            if (id != null) {
+                Client client = clientRepository.findById(id);
+                name.setValue(client.getName());
+                email.setValue(client.getEmail());
+                passport.setValue(client.getPassport());
+            }
+
+            save.addClickListener(e -> {
+                save();
+            });
         }
-
-        save.addClickListener(e -> {
-            save();
-        });
-
-        addKeyPressListener(Key.ENTER, e -> {
-            save();
-        });
-
         cancel.addClickListener(e -> {
             UI.getCurrent().navigate(Clients.class);
         });

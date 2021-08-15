@@ -7,8 +7,7 @@ import com.haulmonttest.repo.CreditRepository;
 import com.haulmonttest.repo.UuidMapRepository;
 import com.haulmonttest.services.BankService;
 import com.haulmonttest.view.entityTables.Credits;
-import com.vaadin.flow.component.Key;
-import com.vaadin.flow.component.KeyNotifier;
+import com.haulmonttest.view.subViews.EmptyMapping;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -27,7 +26,7 @@ import java.util.UUID;
 
 @Route("manageCredit")
 @PageTitle("Manage Credit")
-public class ManageCredit extends VerticalLayout implements HasUrlParameter<Integer>, KeyNotifier {
+public class ManageCredit extends VerticalLayout implements HasUrlParameter<Integer> {
     private UUID id;
     private VerticalLayout creditForm;
     private ComboBox<String> bank;
@@ -52,7 +51,7 @@ public class ManageCredit extends VerticalLayout implements HasUrlParameter<Inte
         } else {
             toolbar.add(new H3("Add new credit"));
         }
-        fillForm();
+        fillForm(intByUuid);
     }
 
     @Autowired
@@ -81,25 +80,31 @@ public class ManageCredit extends VerticalLayout implements HasUrlParameter<Inte
         add(toolbar, creditForm);
     }
 
-    public void fillForm() {
+    public void fillForm(int intByUUID) {
+        if(id == null && intByUUID != 0) {
+            bank.setVisible(false);
+            type.setVisible(false);
+            limit.setVisible(false);
+            percent.setVisible(false);
+            save.setVisible(false);
 
-        if (id != null) {
-            Credit credit = creditRepository.findById(id);
-            bank.setValue(credit.getBankName());
-            type.setValue(credit.getType());
-            limit.setValue(Integer.toString(credit.getLimit()));
-            percent.setValue(Integer.toString(credit.getPercent()));
+            toolbar.setVisible(false);
+        }
+        else {
+            if (id != null) {
+                Credit credit = creditRepository.findById(id);
+                bank.setValue(credit.getBankName());
+                type.setValue(credit.getType());
+                limit.setValue(Integer.toString(credit.getLimit()));
+                percent.setValue(Integer.toString(credit.getPercent()));
+
+            }
+
+            save.addClickListener(e -> {
+                save();
+            });
 
         }
-
-        save.addClickListener(e -> {
-            save();
-        });
-
-        addKeyPressListener(Key.ENTER, e -> {
-            save();
-        });
-
         cancel.addClickListener(e -> {
             UI.getCurrent().navigate(Credits.class);
         });

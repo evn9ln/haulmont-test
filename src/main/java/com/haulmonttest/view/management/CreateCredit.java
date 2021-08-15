@@ -8,8 +8,6 @@ import com.haulmonttest.services.BankService;
 import com.haulmonttest.services.ClientService;
 import com.haulmonttest.services.CreditService;
 import com.haulmonttest.view.entityTables.CreditOffers;
-import com.vaadin.flow.component.Key;
-import com.vaadin.flow.component.KeyNotifier;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -24,7 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @Route("createCreditOffer")
 @PageTitle("Create credit offer")
-public class CreateCredit extends VerticalLayout implements KeyNotifier {
+public class CreateCredit extends VerticalLayout {
     private VerticalLayout creditForm;
     private ComboBox<String> nameSelect;
     private ComboBox<String> bankSelect;
@@ -108,9 +106,6 @@ public class CreateCredit extends VerticalLayout implements KeyNotifier {
             save();
         });
 
-        addKeyPressListener(Key.ENTER, e -> {
-            save();
-        });
 
         cancel.addClickListener(e -> {
             UI.getCurrent().navigate(CreditOffers.class);

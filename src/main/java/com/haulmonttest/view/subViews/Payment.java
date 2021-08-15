@@ -6,8 +6,6 @@ import com.haulmonttest.repo.CreditOfferRepository;
 import com.haulmonttest.repo.PaymentTimetableRepository;
 import com.haulmonttest.repo.UuidMapRepository;
 import com.haulmonttest.view.entityTables.CreditOffers;
-import com.vaadin.flow.component.Key;
-import com.vaadin.flow.component.KeyNotifier;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -28,7 +26,7 @@ import java.util.UUID;
 
 @Route("payment")
 @PageTitle("Payment")
-public class Payment extends VerticalLayout implements HasUrlParameter<Integer>, KeyNotifier {
+public class Payment extends VerticalLayout implements HasUrlParameter<Integer> {
 
     private UUID id;
     private TextField name;
@@ -81,73 +79,77 @@ public class Payment extends VerticalLayout implements HasUrlParameter<Integer>,
     public void fillPage() {
         CreditOffer creditOffer = creditOfferRepository.findById(id);
 
-        name.setValue(creditOffer.getClientName());
-        name.setReadOnly(true);
-        creditType.setValue(creditOffer.getCreditType());
-        creditType.setReadOnly(true);
-        int total = (int)(creditOffer.getAmount()
-                * (1 +  (double)(creditOffer.getCreditId().getPercent()) / 100));
-        totalSumToPay.setValue(Integer.toString(total));
-        totalSumToPay.setReadOnly(true);
-        balance.setValue(Integer.toString(creditOffer.getBalance()));
-        balance.setReadOnly(true);
-        int minimalPay = total/creditOffer.getMonths();
-        if (minimalPay > total - creditOffer.getBalance()) {
-            minPay.setValue(Integer.toString(total - creditOffer.getBalance()));
+        if(creditOffer != null) {
+            name.setValue(creditOffer.getClientName());
+            name.setReadOnly(true);
+            creditType.setValue(creditOffer.getCreditType());
+            creditType.setReadOnly(true);
+            int total = (int) (creditOffer.getAmount()
+                    * (1 + (double) (creditOffer.getCreditId().getPercent()) / 100));
+            totalSumToPay.setValue(Integer.toString(total));
+            totalSumToPay.setReadOnly(true);
+            balance.setValue(Integer.toString(creditOffer.getBalance()));
+            balance.setReadOnly(true);
+            int minimalPay = total / creditOffer.getMonths();
+            if (minimalPay > total - creditOffer.getBalance()) {
+                minPay.setValue(Integer.toString(total - creditOffer.getBalance()));
+            } else {
+                minPay.setValue(Integer.toString(minimalPay));
+            }
+            minPay.setReadOnly(true);
+
+            Dialog dialog = new Dialog();
+            Button dialogConfirm = new Button("Pay");
+            Button dialogCancel = new Button("Cancel");
+            Label label = new Label("Confirm payment");
+
+            dialog.add(label, dialogConfirm, dialogCancel);
+
+            pay.addClickListener(e -> {
+                pay(creditOffer, dialog, total);
+            });
+
+            dialogConfirm.addClickListener(e -> {
+
+                creditOffer.setBalance(creditOffer.getBalance() + Integer.parseInt(paymentAmount.getValue()));
+                creditOfferRepository.save(creditOffer);
+
+                PaymentTimetable paymentTimetable = new PaymentTimetable();
+                paymentTimetable.setCreditOfferId(creditOffer.getId());
+                paymentTimetable.setDate(new Date());
+                paymentTimetable.setAmount(Integer.parseInt(paymentAmount.getValue()));
+                int bodyPayment = (int) (Double.parseDouble(paymentAmount.getValue()) * (1.0 - (double) creditOffer.getCreditId().getPercent() / 100));
+                paymentTimetable.setRepaymentAmount(bodyPayment);
+                paymentTimetable.setPercentRepaymentAmount(Integer.parseInt(paymentAmount.getValue()) - bodyPayment);
+                paymentTimetableRepository.save(paymentTimetable);
+
+                dialog.close();
+
+                Notification notification = new Notification("Payment successfully completed", 1000);
+                notification.setPosition(Notification.Position.MIDDLE);
+                notification.addDetachListener(detachEvent -> {
+                    UI.getCurrent().navigate(CreditOffers.class);
+                });
+                notification.open();
+            });
+
+            dialogCancel.addClickListener(e -> {
+                dialog.close();
+            });
+
+        } else {
+            name.setVisible(false);
+            creditType.setVisible(false);
+            totalSumToPay.setVisible(false);
+            balance.setVisible(false);
+            minPay.setVisible(false);
+            paymentAmount.setVisible(false);
+
+            pay.setVisible(false);
         }
-        else {
-            minPay.setValue(Integer.toString(minimalPay));
-        }
-        minPay.setReadOnly(true);
-
-        Dialog dialog = new Dialog();
-        Button dialogConfirm = new Button("Pay");
-        Button dialogCancel = new Button("Cancel");
-        Label label = new Label("Confirm payment");
-
-        dialog.add(label, dialogConfirm, dialogCancel);
-
-        pay.addClickListener(e -> {
-            pay(creditOffer, dialog, total);
-        });
-
-        addKeyPressListener(Key.ENTER, e -> {
-            pay(creditOffer, dialog, total);
-        });
-
-
-        dialogConfirm.addClickListener(e -> {
-
-            creditOffer.setBalance(creditOffer.getBalance() + Integer.parseInt(paymentAmount.getValue()));
-            creditOfferRepository.save(creditOffer);
-
-            PaymentTimetable paymentTimetable = new PaymentTimetable();
-            paymentTimetable.setCreditOfferId(creditOffer.getId());
-            paymentTimetable.setDate(new Date());
-            paymentTimetable.setAmount(Integer.parseInt(paymentAmount.getValue()));
-            int bodyPayment = (int)(Double.parseDouble(paymentAmount.getValue()) * (1.0 - (double)creditOffer.getCreditId().getPercent()/100));
-            paymentTimetable.setRepaymentAmount(bodyPayment);
-            paymentTimetable.setPercentRepaymentAmount(Integer.parseInt(paymentAmount.getValue()) - bodyPayment);
-            paymentTimetableRepository.save(paymentTimetable);
-
-            dialog.close();
-
-            Notification notification = new Notification("Payment successfully completed", 1000);
-            notification.setPosition(Notification.Position.MIDDLE);
-            notification.addDetachListener(detachEvent -> {
+            cancel.addClickListener(e -> {
                 UI.getCurrent().navigate(CreditOffers.class);
             });
-            notification.open();
-        });
-
-        dialogCancel.addClickListener(e -> {
-            dialog.close();
-        });
-
-        cancel.addClickListener(e -> {
-            UI.getCurrent().navigate(CreditOffers.class);
-        });
-
     }
 
     private void pay(CreditOffer creditOffer, Dialog dialog, int total) {

@@ -122,9 +122,24 @@ public class CreditInfo extends VerticalLayout implements HasUrlParameter<Intege
             timetable.setReadOnly(true);
             balance.setReadOnly(true);
         }
-        returnBtn.addClickListener(e -> {
-            UI.getCurrent().navigate(CreditOffers.class);
-        });
-    }
+        else {
+            name.setVisible(false);
+            bank.setVisible(false);
+            creditType.setVisible(false);
+            amount.setVisible(false);
+            months.setVisible(false);
+            totalSumToPay.setVisible(false);
+            totalSumPercents.setVisible(false);
+            minMonthlyPay.setVisible(false);
+            balance.setVisible(false);
+            titleTimetable.setVisible(false);
+            timetable.setVisible(false);
 
+
+        }
+            returnBtn.addClickListener(e -> {
+                UI.getCurrent().navigate(CreditOffers.class);
+            });
+
+    }
 }

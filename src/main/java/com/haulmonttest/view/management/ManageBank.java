@@ -5,8 +5,7 @@ import com.haulmonttest.domain.UuidMap;
 import com.haulmonttest.repo.BankRepository;
 import com.haulmonttest.repo.UuidMapRepository;
 import com.haulmonttest.view.entityTables.Banks;
-import com.vaadin.flow.component.Key;
-import com.vaadin.flow.component.KeyNotifier;
+import com.haulmonttest.view.subViews.EmptyMapping;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H3;
@@ -24,7 +23,7 @@ import java.util.UUID;
 
 @Route("manageBank")
 @PageTitle("Manage Bank")
-public class ManageBank extends VerticalLayout implements HasUrlParameter<Integer>, KeyNotifier {
+public class ManageBank extends VerticalLayout implements HasUrlParameter<Integer> {
     private UUID id;
     private VerticalLayout bankForm;
     private TextField name;
@@ -45,7 +44,7 @@ public class ManageBank extends VerticalLayout implements HasUrlParameter<Intege
         } else {
             toolbar.add(new H3("Add new bank"));
         }
-        fillForm();
+        fillForm(intByUuid);
     }
 
     @Autowired
@@ -65,20 +64,23 @@ public class ManageBank extends VerticalLayout implements HasUrlParameter<Intege
         add(toolbar, bankForm);
     }
 
-    public void fillForm() {
+    public void fillForm(int intByUuid) {
 
-        if (id != null) {
-            Bank bank = bankRepository.findById(id);
-            name.setValue(bank.getName());
+        if(id == null && intByUuid != 0) {
+            name.setVisible(false);
+            save.setVisible(false);
+
+            toolbar.setVisible(false);
+        } else {
+            if (id != null) {
+                Bank bank = bankRepository.findById(id);
+                name.setValue(bank.getName());
+            }
+
+            save.addClickListener(e -> {
+                save();
+            });
         }
-
-        save.addClickListener(e -> {
-            save();
-        });
-
-        addKeyPressListener(Key.ENTER, e -> {
-            save();
-        });
 
         cancel.addClickListener(e -> {
             UI.getCurrent().navigate(Banks.class);
